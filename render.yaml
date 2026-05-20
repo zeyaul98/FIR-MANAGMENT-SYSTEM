@@ -1,0 +1,33 @@
+# This file defines the services for Render deployment
+# You can use this as reference for manual deployment
+# Or upload to Render for one-click deployment
+
+services:
+  - type: web
+    name: railway-fir-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: HOST
+        value: 0.0.0.0
+      - key: MONGO_URI
+        scope: runtime
+      - key: JWT_SECRET
+        scope: runtime
+      - key: FRONTEND_URL
+        scope: runtime
+
+  - type: static
+    name: railway-fir-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        scope: build
