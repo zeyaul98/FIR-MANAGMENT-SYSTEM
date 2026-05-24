@@ -24,6 +24,8 @@ connectDB();
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/search", require("./routes/searchRoutes"));
+app.use("/api/officer", require("./routes/officerRoutes"));
+app.use("/api/officer", require("./routes/officerRoutes"));
 
 // TEST ROUTE
 app.get("/", (req, res) => {

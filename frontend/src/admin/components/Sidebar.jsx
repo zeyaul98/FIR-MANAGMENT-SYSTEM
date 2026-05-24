@@ -1,5 +1,6 @@
-import React from "react";
+
 import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import {
   LayoutDashboard,
   Search,
@@ -12,6 +13,7 @@ import {
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const [openSettings, setOpenSettings] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -22,6 +24,7 @@ const Sidebar = () => {
   const goToDashboard = () => navigate("/admin");
   const goToSmartSearch = () => navigate("/admin/smart-search");
   const goToReports = () => navigate("/admin/reports");
+  const goToProfile = () => navigate("/admin/profile");
 
   return (
     <div className="w-[280px] min-h-screen bg-[#030B2B] text-white flex flex-col justify-between overflow-y-auto">
@@ -85,33 +88,67 @@ const Sidebar = () => {
             </div>
           </div>
 
-          {/* SYSTEM */}
           <div className="mt-12">
-            <p className="text-xs tracking-[3px] text-gray-400 mb-5 px-2">
-              SYSTEM CONFIGURATION
-            </p>
-            <div className="flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl cursor-pointer transition-colors">
-              <div className="flex items-center gap-4">
-                <Settings size={22} />
-                <span className="text-lg">
-                  Settings
-                </span>
-              </div>
-              <ChevronRight size={18} />
-            </div>
-          </div>
+  <p className="text-xs tracking-[3px] text-gray-400 mb-5 px-2">
+    SYSTEM CONFIGURATION
+  </p>
+
+  <div
+    onClick={() => setOpenSettings(!openSettings)}
+    className={`flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-colors ${
+      openSettings ? "bg-white text-[#233ED9]" : "hover:bg-white/5"
+    }`}
+  >
+    <div className="flex items-center gap-4">
+      <Settings size={22} />
+      <span className="text-lg">Settings</span>
+    </div>
+
+    <ChevronRight
+      size={18}
+      className={`transition-transform ${openSettings ? "rotate-90" : ""}`}
+    />
+  </div>
+
+  {openSettings && (
+    <div className="mt-3 ml-3 space-y-2">
+      {[
+        "Manage State",
+        "Manage Zone",
+        "Manage District",
+        "Manage Sub-Division",
+        "Manage Circle Office",
+        "Manage Thana",
+        "Manage IO",
+        "Manage Court",
+        "Manage Crime",
+        "Manage Accused Type",
+        "Manage Modus Operandi",
+      ].map((item, index) => (
+        <div
+          key={index}
+          onClick={() => console.log(item)}
+          className="px-5 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer font-semibold"
+        >
+          {item}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
           {/* ACCOUNT */}
           <div className="mt-12">
             <p className="text-xs tracking-[3px] text-gray-400 mb-5 px-2">
               ACCOUNT
             </p>
-            <div className="flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl cursor-pointer transition-colors">
+            <div
+              onClick={goToProfile}
+              className="flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl cursor-pointer transition-colors"
+            >
               <div className="flex items-center gap-4">
                 <User size={22} />
-                <span className="text-lg">
-                  My Profile
-                </span>
+                <span className="text-lg">My Profile</span>
               </div>
               <ChevronRight size={18} />
             </div>

@@ -63,6 +63,9 @@ const buildSearchQuery = async (query) => {
 const searchFIRs = async (req, res) => {
   try {
     const filters = await buildSearchQuery(req.query);
+    
+    const totalCount = await FIR.countDocuments(filters);
+    
     const query = FIR.find(filters)
       .populate("districtId", "name")
       .populate("thanaId", "name")
@@ -74,21 +77,35 @@ const searchFIRs = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      count: results.length,
-      data: results.map((fir) => ({
-        id: fir._id,
-        firNumber: fir.firNumber,
-        district: fir.districtId?.name || "",
-        thana: fir.thanaId?.name || "",
-        description: fir.description,
-        status: fir.status,
-        dateOfIncident: fir.dateOfIncident,
-        dateOfRegistration: fir.dateOfRegistration,
-        totalAccused: fir.totalAccused,
-        bailed: fir.bailed,
-        inCustody: fir.inCustody,
-        accused: fir.accused?.map((a) => ({ name: a.name, status: a.status })) || [],
-      })),
+      count: totalCount,
+      data: results.map((fir) => {
+        // Extract district and thana from description if not populated
+        const description = fir.description || "";
+        const parts = description.split(" - ");
+        const extractLocation = (desc) => {
+          if (desc.includes("Patna")) return "Patna";
+          if (desc.includes("Bihar Sharif")) return "Bihar Sharif";
+          if (desc.includes("Madhubani")) return "Madhubani";
+          if (desc.includes("Darbhanga")) return "Darbhanga";
+          if (desc.includes("Begusarai")) return "Begusarai";
+          return "Railway";
+        };
+
+        return {
+          id: fir._id,
+          firNumber: fir.firNumber,
+          district: fir.districtId?.name || extractLocation(description),
+          thana: fir.thanaId?.name || `Railway Station, ${extractLocation(description)}`,
+          description: fir.description,
+          status: fir.status,
+          dateOfIncident: fir.dateOfIncident,
+          dateOfRegistration: fir.dateOfRegistration,
+          totalAccused: fir.totalAccused,
+          bailed: fir.bailed,
+          inCustody: fir.inCustody,
+          accused: fir.accused?.map((a) => ({ name: a.name, status: a.status })) || [],
+        };
+      }),
     });
   } catch (error) {
     console.error("Search error:", error);
