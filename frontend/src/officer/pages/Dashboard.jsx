@@ -5,14 +5,29 @@ import {
   CheckCircle,
   BarChart3,
   LogOut,
+  Users,
+  ShieldCheck,
+  Activity,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { useNavigate } from "react-router-dom";
-import api from "../../api";
+import { apiCall } from "../../api";
+import { motion } from "framer-motion";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,8 +39,8 @@ const Dashboard = () => {
 
   const fetchDashboard = async () => {
     try {
-      const res = await api.get("/officer/dashboard");
-      setDashboardData(res.data.data);
+      const res = await apiCall("/api/officer/dashboard");
+      setDashboardData(res.data);
     } catch (error) {
       console.error("Dashboard fetch error:", error);
     } finally {
@@ -41,23 +56,23 @@ const Dashboard = () => {
     {
       title: "My Cases",
       value: dashboardData?.myCases || 0,
-      icon: <FileText size={28} />,
+      icon: FileText,
+      color: "text-blue-600",
       bg: "bg-blue-50",
-      text: "text-blue-600",
     },
     {
       title: "Active Cases",
       value: dashboardData?.activeCases || 0,
-      icon: <AlertTriangle size={28} />,
+      icon: AlertTriangle,
+      color: "text-orange-600",
       bg: "bg-orange-50",
-      text: "text-orange-600",
     },
     {
       title: "Closed Cases",
       value: dashboardData?.closedCases || 0,
-      icon: <CheckCircle size={28} />,
+      icon: CheckCircle,
+      color: "text-green-600",
       bg: "bg-green-50",
-      text: "text-green-600",
     },
   ];
 
@@ -65,39 +80,61 @@ const Dashboard = () => {
     {
       title: "Total FIRs",
       value: dashboardData?.overview?.totalFIRs || 0,
-      color: "text-blue-600",
+      icon: FileText,
+      color: "text-blue-700",
     },
     {
       title: "Total Accused",
       value: dashboardData?.overview?.totalAccused || 0,
-      color: "text-red-600",
+      icon: Users,
+      color: "text-red-700",
     },
     {
       title: "Arrested",
       value: dashboardData?.overview?.arrested || 0,
-      color: "text-orange-600",
+      icon: AlertTriangle,
+      color: "text-orange-700",
     },
     {
       title: "Bailed",
       value: dashboardData?.overview?.bailed || 0,
-      color: "text-green-600",
+      icon: ShieldCheck,
+      color: "text-green-700",
     },
     {
       title: "Jailed",
       value: dashboardData?.overview?.jailed || 0,
-      color: "text-purple-600",
+      icon: Activity,
+      color: "text-purple-700",
     },
   ];
 
   const topDistricts = dashboardData?.topDistricts || [];
-  const recentCases = dashboardData?.recentCases || [];
+
+  const accusedChartData = [
+    {
+      name: "Arrested",
+      value: dashboardData?.overview?.arrested || 0,
+      color: "#f97316",
+    },
+    {
+      name: "Bailed",
+      value: dashboardData?.overview?.bailed || 0,
+      color: "#22c55e",
+    },
+    {
+      name: "Jailed",
+      value: dashboardData?.overview?.jailed || 0,
+      color: "#7c3aed",
+    },
+  ].filter((item) => item.value > 0);
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-[#F4F7FB]">
+      <div className="flex min-h-screen bg-slate-100">
         <Sidebar />
         <main className="flex-1 p-8">
-          <div className="bg-white rounded-2xl p-8 shadow-sm">
+          <div className="bg-white rounded-2xl p-8 shadow-sm animate-pulse">
             Loading dashboard...
           </div>
         </main>
@@ -106,162 +143,177 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F4F7FB]">
+    <div className="flex min-h-screen bg-[#f3f4f6]">
       <Sidebar />
 
-      <main className="flex-1 p-8 overflow-y-auto">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex items-center justify-between">
+      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <div className="flex justify-between items-center mb-7">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900">
+            <h1 className="text-3xl font-black text-slate-900">
               Officer Dashboard
             </h1>
-            <p className="text-gray-500 mt-2">Welcome, Officer User</p>
+            <p className="text-slate-500 font-medium mt-1">
+              Case analytics and FIR summary
+            </p>
           </div>
 
           <button
             onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2"
+            className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2"
           >
             <LogOut size={18} />
             Logout
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          {stats.map((item, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 flex items-center justify-between hover:shadow-md transition"
-            >
-              <div>
-                <p className="text-gray-500 font-medium">{item.title}</p>
-                <h2 className="text-4xl font-bold text-gray-900 mt-2">
-                  {item.value}
-                </h2>
-              </div>
+        {/* TOP CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {stats.map((item, index) => {
+            const Icon = item.icon;
 
-              <div
-                className={`w-14 h-14 rounded-2xl ${item.bg} ${item.text} flex items-center justify-center`}
+            return (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                whileHover={{ y: -5 }}
+                className="bg-white rounded-xl shadow-sm border p-6 flex justify-between items-center"
               >
-                {item.icon}
-              </div>
-            </div>
-          ))}
+                <div>
+                  <p className="text-slate-500 font-semibold">{item.title}</p>
+                  <h2 className="text-3xl font-black mt-2 text-slate-900">
+                    {item.value}
+                  </h2>
+                </div>
+
+                <div
+                  className={`w-14 h-14 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center`}
+                >
+                  <Icon size={28} />
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
-        <div className="mt-10">
-          <h2 className="text-2xl font-bold text-gray-900 mb-5">
-            District-wise Overview
-          </h2>
+        {/* OVERVIEW */}
+        <h2 className="text-2xl font-black text-slate-900 mt-9 mb-5">
+          District-wise Overview
+        </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
-            {overview.map((item, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center"
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5">
+          {overview.map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ scale: 1.04 }}
+                className="bg-white rounded-xl shadow-sm border p-5 text-center"
               >
-                <p className="text-gray-500">{item.title}</p>
-                <h3 className={`text-3xl font-bold mt-2 ${item.color}`}>
+                <div className="flex justify-center mb-2">
+                  <Icon size={22} className={item.color} />
+                </div>
+
+                <p className="text-slate-500 font-semibold text-sm">
+                  {item.title}
+                </p>
+
+                <h3 className={`text-3xl font-black mt-2 ${item.color}`}>
                   {item.value}
                 </h3>
-              </div>
-            ))}
-          </div>
+              </motion.div>
+            );
+          })}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7">
-            <div className="flex items-center gap-3 mb-8">
-              <BarChart3 className="text-blue-600" />
-              <h3 className="text-xl font-bold text-gray-900">
-                Top Districts by FIRs
-              </h3>
-            </div>
-
-            <div className="space-y-6">
-              {topDistricts.length > 0 ? (
-                topDistricts.map((item, index) => {
-                  const maxValue = Math.max(
-                    ...topDistricts.map((d) => d.value || 0),
-                    1
-                  );
-
-                  const width = ((item.value || 0) / maxValue) * 100;
-
-                  return (
-                    <div key={index}>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="font-medium text-gray-700">
-                          {item.name || "-"}
-                        </span>
-                        <span className="font-bold text-gray-900">
-                          {item.value || 0}
-                        </span>
-                      </div>
-
-                      <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-600 rounded-full"
-                          style={{ width: `${width}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-gray-500 text-sm">
-                  No district data available
-                </p>
-              )}
-            </div>
+        {/* TOP DISTRICTS BAR */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-sm border p-7 mt-7"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <BarChart3 className="text-blue-600" />
+            <h3 className="text-xl font-black text-slate-900">
+              Top Districts by FIRs
+            </h3>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7">
-            <div className="flex items-center gap-3 mb-6">
-              <FileText className="text-indigo-600" />
-              <h3 className="text-xl font-bold text-gray-900">
-                Recent FIR Cases
-              </h3>
+          {topDistricts.length > 0 ? (
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={topDistricts}
+                  layout="vertical"
+                  margin={{ top: 10, right: 40, left: 80, bottom: 10 }}
+                >
+                  <XAxis type="number" hide />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={120}
+                    tick={{ fontSize: 13, fill: "#334155" }}
+                  />
+                  <Tooltip />
+                  <Bar
+                    dataKey="value"
+                    fill="#3b82f6"
+                    radius={[0, 10, 10, 0]}
+                    barSize={26}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
+          ) : (
+            <p className="text-slate-500 font-semibold">
+              No district data available
+            </p>
+          )}
+        </motion.div>
 
-            <div className="space-y-4">
-              {recentCases.length > 0 ? (
-                recentCases.map((item, index) => (
-                  <div
-                    key={item._id || index}
-                    className="border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50"
+        {/* DONUT CHART */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-sm border p-7 mt-7"
+        >
+          <h3 className="text-xl font-black text-slate-900 mb-6">
+            Accused Status Distribution
+          </h3>
+
+          {accusedChartData.length > 0 ? (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={accusedChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={65}
+                    outerRadius={105}
+                    paddingAngle={3}
+                    label
                   >
-                    <div>
-                      <p className="font-bold text-gray-900">
-                        {item.firNumber || "-"}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {item.districtId?.name || "-"}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold capitalize">
-                        {item.status || "-"}
-                      </span>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {item.dateOfRegistration
-                          ? new Date(item.dateOfRegistration).toLocaleDateString(
-                              "en-IN"
-                            )
-                          : "-"}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">
-                  No recent FIR cases available
-                </p>
-              )}
+                    {accusedChartData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-          </div>
-        </div>
+          ) : (
+            <p className="text-slate-500 font-semibold">
+              No accused status data available
+            </p>
+          )}
+        </motion.div>
       </main>
     </div>
   );

@@ -1,18 +1,21 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const getApiUrl = () => API_URL;
 
 export const apiCall = async (endpoint, options = {}) => {
   const url = `${API_URL}${endpoint}`;
-  const token = localStorage.getItem('token');
-  
+  const token = localStorage.getItem("token");
+
+  const isFormData = options.body instanceof FormData;
+
   const headers = {
-    'Content-Type': 'application/json',
+    "ngrok-skip-browser-warning": "true",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...options.headers,
   };
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.Authorization = `Bearer ${token}`;
   }
 
   try {
@@ -21,7 +24,16 @@ export const apiCall = async (endpoint, options = {}) => {
       headers,
     });
 
-    const data = await response.json();
+    const text = await response.text();
+
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(
+        "Backend JSON nahi bhej raha. URL/route galat hai ya ngrok warning page aa raha hai."
+      );
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `HTTP Error: ${response.status}`);
@@ -29,7 +41,7 @@ export const apiCall = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 };

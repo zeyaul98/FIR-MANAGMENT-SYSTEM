@@ -1,7 +1,22 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { apiCall } from "../../api";
-import { Search, ChevronDown } from "lucide-react";
+import {
+  Search,
+  ChevronDown,
+  UserRound,
+  Phone,
+  MapPin,
+  FileText,
+  Shield,
+  RotateCcw,
+  Mail,
+  Fingerprint,
+  Building2,
+  Scale,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 const AccusedList = () => {
   const [accused, setAccused] = useState([]);
@@ -20,63 +35,88 @@ const AccusedList = () => {
     limit: 10,
   });
 
-  const fetchAccused = async () => {
+  const fetchAccused = async (pageNo = page) => {
     try {
       setLoading(true);
 
       const params = new URLSearchParams();
-      params.append("page", page);
+      params.append("page", pageNo);
       params.append("limit", 10);
 
       if (filters.search) params.append("search", filters.search);
       if (filters.status) params.append("status", filters.status);
+      if (filters.district) params.append("district", filters.district);
 
       const res = await apiCall(`/api/officer/accused?${params.toString()}`);
 
       setAccused(res.data || []);
       setPagination(res.pagination || { total: 0, pages: 1, limit: 10 });
     } catch (error) {
-      console.log(error);
-      alert("Accused list load failed");
+      toast.error(error.message || "Accused list load failed");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAccused();
+    fetchAccused(page);
   }, [page]);
 
   const handleSearch = () => {
     setPage(1);
-    fetchAccused();
+    fetchAccused(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({ search: "", status: "", district: "" });
+    setPage(1);
+    setTimeout(() => fetchAccused(1), 0);
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f4f5f7]">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50 to-blue-100">
       <Sidebar />
 
-      <main className="flex-1 p-7">
-        <div className="flex justify-between items-start mb-5">
-          <h1 className="text-2xl font-bold tracking-wide text-gray-800">
-            Accused Records
-          </h1>
+      <main className="flex-1 p-6 overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-between items-start mb-6"
+        >
+          <div>
+            <h1 className="text-4xl font-black text-slate-900 flex items-center gap-3">
+              <span className="p-3 rounded-2xl bg-blue-700 text-white shadow-lg">
+                <UserRound size={30} />
+              </span>
+              Accused Records
+            </h1>
+            <p className="text-slate-500 mt-2 font-medium">
+              View accused details, FIR mapping and custody status.
+            </p>
+          </div>
 
-          <div className="text-right">
-            <h2 className="text-3xl font-bold text-blue-600">
+          <motion.div
+            whileHover={{ scale: 1.04 }}
+            className="bg-white rounded-3xl px-7 py-5 border border-blue-100 shadow-md text-right"
+          >
+            <h2 className="text-4xl font-black text-blue-700">
               {pagination.total}
             </h2>
-            <p className="text-sm text-gray-500">Total Accused</p>
-          </div>
-        </div>
+            <p className="text-sm text-slate-500 font-bold">Total Accused</p>
+          </motion.div>
+        </motion.div>
 
-        <div className="bg-white border border-gray-200 rounded-md p-4 mb-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Search size={18} className="text-blue-500" />
-            <h2 className="font-bold text-gray-800">Filters</h2>
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/90 backdrop-blur border border-slate-200 rounded-3xl p-6 mb-6 shadow-sm"
+        >
+          <div className="flex items-center gap-2 mb-5">
+            <Search size={21} className="text-blue-700" />
+            <h2 className="font-black text-xl text-slate-900">Filters</h2>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               value={filters.search}
               onChange={(e) =>
@@ -84,7 +124,7 @@ const AccusedList = () => {
               }
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Search name, father, mobile..."
-              className="h-11 border border-gray-300 rounded-md px-4 outline-none focus:border-blue-500"
+              className="input"
             />
 
             <Select
@@ -93,7 +133,7 @@ const AccusedList = () => {
                 setFilters({ ...filters, status: e.target.value })
               }
             >
-              <option value="">Select Status...</option>
+              <option value="">All Status</option>
               <option value="arrested">Arrested</option>
               <option value="bail">Bail</option>
               <option value="under-trial">Under Trial</option>
@@ -108,137 +148,235 @@ const AccusedList = () => {
                 setFilters({ ...filters, district: e.target.value })
               }
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Select District..."
-              className="h-11 border border-gray-300 rounded-md px-4 outline-none focus:border-blue-500"
+              placeholder="Search District..."
+              className="input"
             />
           </div>
 
-          <div className="mt-4 flex gap-3 justify-end">
+          <div className="mt-5 flex gap-3 justify-end">
             <button
-              onClick={() => {
-                setFilters({ search: "", status: "", district: "" });
-                setPage(1);
-              }}
-              className="px-5 py-2 rounded-md bg-gray-200 font-semibold"
+              onClick={clearFilters}
+              className="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black flex items-center gap-2"
             >
-              Clear
+              <RotateCcw size={18} /> Clear
             </button>
 
             <button
               onClick={handleSearch}
-              className="px-5 py-2 rounded-md bg-blue-700 text-white font-semibold"
+              className="px-7 py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-black flex items-center gap-2 shadow-md"
             >
-              Search
+              <Search size={18} /> Search
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="flex justify-end mb-4 text-gray-600">
+        <div className="flex justify-end mb-4 text-slate-600 font-bold">
           Page {page} of {pagination.pages}
         </div>
 
         {loading ? (
-          <div className="bg-white p-10 text-center rounded-md">Loading...</div>
+          <div className="bg-white p-10 text-center rounded-3xl shadow-sm font-bold">
+            Loading accused records...
+          </div>
         ) : accused.length > 0 ? (
-          <div className="space-y-5">
-            {accused.map((item) => (
-              <AccusedCard key={item._id} item={item} />
+          <div className="space-y-6">
+            {accused.map((item, index) => (
+              <AccusedCard key={item._id || index} item={item} index={index} />
             ))}
           </div>
         ) : (
-          <div className="bg-white p-10 text-center rounded-md text-gray-500">
+          <div className="bg-white p-10 text-center rounded-3xl text-slate-500 shadow-sm">
             No accused found
           </div>
         )}
 
-        <div className="flex justify-end items-center gap-3 mt-5">
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
+        <Pagination
+          page={page}
+          pages={pagination.pages}
+          setPage={setPage}
+          total={pagination.total}
+        />
 
-          <button
-            disabled={page >= pagination.pages}
-            onClick={() => setPage(page + 1)}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        <style>{`
+          .input {
+            width: 100%;
+            height: 50px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 0 16px;
+            outline: none;
+            font-weight: 600;
+          }
+          .input:focus {
+            border-color: #2563eb;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+          }
+        `}</style>
       </main>
     </div>
   );
 };
 
-const AccusedCard = ({ item }) => {
+const AccusedCard = ({ item, index }) => {
   const fir = item.firId;
 
   return (
-    <div className="bg-[#fffdeb] border border-yellow-400 rounded-md p-5">
-      <div className="flex justify-between items-start mb-5">
+    <motion.div
+      initial={{ opacity: 0, y: 22 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
+      whileHover={{ y: -5, scale: 1.005 }}
+      className="relative overflow-hidden bg-gradient-to-br from-white via-amber-50 to-yellow-50 border border-yellow-300 rounded-[28px] p-7 shadow-sm hover:shadow-xl transition"
+    >
+      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-blue-600" />
+
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">{item.name}</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-3xl font-black tracking-wide text-slate-950 uppercase">
+            {item.name || "Unknown"}
+          </h2>
+          <p className="text-sm text-slate-600 mt-2 font-semibold">
             S/o: {item.fatherName || "N/A"}
           </p>
         </div>
 
-        <span className="bg-gray-100 px-4 py-1 rounded text-sm font-bold text-gray-700">
-          ⚪ {item.status || "Unknown"}
-        </span>
+        <StatusBadge status={item.status} />
       </div>
 
-      <div className="grid grid-cols-4 gap-y-5 text-sm">
-        <Info label="AGE & GENDER" value={`${item.age || "N/A"} years, ${item.gender || "N/A"}`} />
-        <Info label="MOBILE" value={item.mobile || "N/A"} />
-        <Info label="STATE" value="Bihar" />
-        <Info label="DISTRICT" value={item.districtId?.name || fir?.districtId?.name || "N/A"} />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <Info label="Age & Gender" value={`${item.age || "N/A"} years, ${item.gender || "N/A"}`} icon={UserRound} />
+        <Info label="Mobile" value={item.mobile || "N/A"} icon={Phone} />
+        <Info label="State" value={item.state || "N/A"} icon={MapPin} />
+        <Info label="District" value={item.districtId?.name || fir?.districtId?.name || "N/A"} icon={MapPin} />
 
-        <Info label="FULL ADDRESS" value={item.address || "N/A"} />
-        <Info label="MARK OF ID" value={item.remarks || "N/A"} />
-        <Info label="BUILT" value="Average" />
-        <Info label="FIR NUMBER" value={fir?.firNumber || "N/A"} blue />
+        <Info label="Full Address" value={item.address || "N/A"} icon={MapPin} />
+        <Info label="Mark of ID" value={item.markIdentification || item.remarks || "N/A"} icon={Shield} />
+        <Info label="Built" value={item.built || "N/A"} icon={UserRound} />
+        <Info label="FIR Number" value={fir?.firNumber || "N/A"} icon={FileText} blue />
 
-        <Info label="JAIL NAME" value="NA" />
-        <Info label="COURT ORDERING JC" value="NA" />
-        <Info label="JC SINCE" value="NA" />
-        <Info label="THANA" value={item.thanaId?.name || fir?.thanaId?.name || "N/A"} />
+        <Info label="Jail Name" value={item.jailName || "NA"} icon={Building2} />
+        <Info label="Court Ordering JC" value={item.courtOrderingJC || "NA"} icon={Scale} />
+        <Info label="JC Since" value={formatDate(item.jcSince)} icon={Shield} />
+        <Info label="Thana" value={item.thanaId?.name || fir?.thanaId?.name || "N/A"} icon={Building2} />
       </div>
 
-      <div className="border-t border-yellow-300 mt-5 pt-4 grid grid-cols-3 text-sm">
-        <Info label="AADHAAR" value={item.aadhaar || "N/A"} />
-        <Info label="EMAIL" value="N/A" />
-        <Info label="SECTION" value={item.sections || "N/A"} />
+      <div className="border-t border-yellow-300 mt-6 pt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Info label="Aadhaar" value={item.aadhaar || "N/A"} icon={Fingerprint} />
+        <Info label="Email" value={item.email || "N/A"} icon={Mail} />
+        <Info label="Section" value={item.sections || fir?.sections || "N/A"} icon={Scale} />
+      </div>
+    </motion.div>
+  );
+};
+
+const StatusBadge = ({ status }) => {
+  const s = status || "Unknown";
+
+  const colors = {
+    arrested: "bg-red-50 text-red-700 border-red-200",
+    bail: "bg-green-50 text-green-700 border-green-200",
+    "under-trial": "bg-orange-50 text-orange-700 border-orange-200",
+    "judicial-custody": "bg-purple-50 text-purple-700 border-purple-200",
+    absconding: "bg-slate-900 text-white border-slate-900",
+    other: "bg-blue-50 text-blue-700 border-blue-200",
+  };
+
+  return (
+    <span
+      className={`px-5 py-2 rounded-full text-sm font-black capitalize border shadow-sm ${
+        colors[s] || "bg-slate-50 text-slate-700 border-slate-200"
+      }`}
+    >
+      <Shield size={14} className="inline mr-1" />
+      {s}
+    </span>
+  );
+};
+
+const Info = ({ label, value, blue, icon: Icon }) => (
+  <motion.div
+    whileHover={{ scale: 1.025 }}
+    className="bg-white/80 rounded-2xl p-4 border border-yellow-100 shadow-sm"
+  >
+    <p className="text-xs font-black text-slate-500 uppercase flex items-center gap-2">
+      {Icon && <Icon size={14} className="text-blue-600" />}
+      {label}
+    </p>
+    <p
+      className={`font-black mt-2 break-words ${
+        blue ? "text-blue-700" : "text-slate-950"
+      }`}
+    >
+      {value || "N/A"}
+    </p>
+  </motion.div>
+);
+
+const Select = ({ children, ...props }) => (
+  <div className="relative">
+    <select {...props} className="input appearance-none">
+      {children}
+    </select>
+    <ChevronDown
+      size={21}
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+    />
+  </div>
+);
+
+const Pagination = ({ page, pages, setPage, total }) => {
+  const start = Math.max(1, page - 4);
+  const end = Math.min(pages, start + 9);
+  const nums = [];
+
+  for (let i = start; i <= end; i++) nums.push(i);
+
+  return (
+    <div className="bg-white rounded-3xl p-5 mt-6 border shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <p className="text-sm text-slate-600 font-semibold">
+        Total <b>{total}</b> records | Page <b>{page}</b> of <b>{pages}</b>
+      </p>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          disabled={page <= 1}
+          onClick={() => setPage(page - 1)}
+          className="px-4 py-2 bg-slate-100 rounded-xl disabled:opacity-50 font-bold"
+        >
+          Prev
+        </button>
+
+        {nums.map((n) => (
+          <button
+            key={n}
+            onClick={() => setPage(n)}
+            className={`w-10 h-10 rounded-xl font-black ${
+              page === n
+                ? "bg-blue-700 text-white shadow-md"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+
+        <button
+          disabled={page >= pages}
+          onClick={() => setPage(page + 1)}
+          className="px-4 py-2 bg-slate-100 rounded-xl disabled:opacity-50 font-bold"
+        >
+          Next
+        </button>
       </div>
     </div>
   );
 };
 
-const Info = ({ label, value, blue }) => (
-  <div>
-    <p className="text-xs font-bold text-gray-500">{label}</p>
-    <p className={`font-semibold ${blue ? "text-blue-700" : "text-gray-900"}`}>
-      {value}
-    </p>
-  </div>
-);
+const formatDate = (date) => {
+  if (!date) return "NA";
+  return new Date(date).toLocaleDateString("en-IN");
+};
 
-const Select = ({ children, ...props }) => (
-  <div className="relative">
-    <select
-      {...props}
-      className="w-full h-11 border border-gray-300 rounded-md px-4 appearance-none outline-none focus:border-blue-500"
-    >
-      {children}
-    </select>
-    <ChevronDown
-      size={20}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-    />
-  </div>
-);
-
-export default AccusedList; 
+export default AccusedList;

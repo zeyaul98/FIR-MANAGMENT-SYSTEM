@@ -24,6 +24,12 @@ const firSchema = new mongoose.Schema(
       default: "",
     },
 
+    districtId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "District",
+      required: true,
+    },
+
     subDivision: {
       type: String,
       default: "",
@@ -32,6 +38,12 @@ const firSchema = new mongoose.Schema(
     circleOffice: {
       type: String,
       default: "",
+    },
+
+    thanaId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Thana",
+      required: true,
     },
 
     court: {
@@ -47,29 +59,6 @@ const firSchema = new mongoose.Schema(
     year: {
       type: Number,
       default: null,
-    },
-
-    districtId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "District",
-      required: true,
-    },
-
-    thanaId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Thana",
-      required: true,
-    },
-
-    description: {
-      type: String,
-      required: true,
-    },
-
-    status: {
-      type: String,
-      enum: ["registered", "investigation", "closed"],
-      default: "registered",
     },
 
     dateOfIncident: {
@@ -122,24 +111,67 @@ const firSchema = new mongoose.Schema(
       default: "",
     },
 
-    ioDetails: {
-      ioName: { type: String, default: "" },
-      beltNo: { type: String, default: "" },
-      rank: { type: String, default: "" },
-      ioMobile: { type: String, default: "" },
+    description: {
+      type: String,
+      required: true,
     },
 
-    lawyerDetails: {
-      lawyerName: { type: String, default: "" },
-      barCouncilNo: { type: String, default: "" },
-      lawyerMobile: { type: String, default: "" },
-      lawyerEmail: { type: String, default: "" },
+    ioName: {
+      type: String,
+      default: "",
+    },
+
+    beltNo: {
+      type: String,
+      default: "",
+    },
+
+    rank: {
+      type: String,
+      default: "",
+    },
+
+    ioMobile: {
+      type: String,
+      default: "",
+    },
+
+    lawyerName: {
+      type: String,
+      default: "",
+    },
+
+    barCouncilNo: {
+      type: String,
+      default: "",
+    },
+
+    lawyerMobile: {
+      type: String,
+      default: "",
+    },
+
+    lawyerEmail: {
+      type: String,
+      default: "",
     },
 
     attachment: {
       type: String,
       default: "",
     },
+
+    status: {
+      type: String,
+      enum: ["registered", "investigation", "closed"],
+      default: "registered",
+    },
+    bailers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Bailer",
+      },
+    ],
 
     accused: [
       {

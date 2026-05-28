@@ -13,6 +13,10 @@ import BulkUploadFIR from "./officer/pages/BulkUploadFIR";
 import OfficerProfile from "./officer/pages/OfficerProfile";
 import FIRList from "./officer/pages/FIRList";
 import AccusedList from "./officer/pages/AccusedList";
+import FIRView from "./officer/pages/FIRView";
+import FIREdit from "./officer/pages/FIREdit";
+import BailList from "./officer/pages/BailList";
+
 
 const App = () => {
   return (
@@ -86,8 +90,15 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/officer/firs/:id" element={<FIRView />} />
+      <Route path="/officer/firs/edit/:id" element={<FIREdit />} /> 
       <Route path="/officer/firs" element={<FIRList />} />
+      <Route path="/officer/bulk-upload" element={<BulkUploadFIR />} />
       <Route path="/officer/accused" element={<AccusedList />} />
+      <Route path="/officer/bails" element={<BailList />} />
+      <Route path="/officer/firs/view/:id" element={<FIRView />} />
+      <Route path="/officer/bails/edit/:id" element={<FIREdit />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

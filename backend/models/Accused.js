@@ -7,6 +7,11 @@ const accusedSchema = new mongoose.Schema(
       ref: "FIR",
       required: true,
     },
+    officerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
     name: {
       type: String,
@@ -31,6 +36,11 @@ const accusedSchema = new mongoose.Schema(
       required: true,
     },
 
+    dob: {
+      type: Date,
+      default: null,
+    },
+
     mobile: {
       type: String,
       trim: true,
@@ -43,10 +53,40 @@ const accusedSchema = new mongoose.Schema(
       default: "",
     },
 
+    markIdentification: {
+      type: String,
+      default: "",
+    },
+
+    built: {
+      type: String,
+      default: "",
+    },
+
+    relationWithBailer: {
+      type: String,
+      default: "",
+    },
+
+    policeStation: {
+      type: String,
+      default: "",
+    },
+
+    state: {
+      type: String,
+      default: "",
+    },
+
     address: {
       type: String,
       required: true,
       trim: true,
+    },
+
+    pinCode: {
+      type: String,
+      default: "",
     },
 
     districtId: {
@@ -80,6 +120,11 @@ const accusedSchema = new mongoose.Schema(
       default: "other",
     },
 
+    isJailCustody: {
+      type: Boolean,
+      default: false,
+    },
+
     isAbsconding: {
       type: Boolean,
       default: false,
@@ -94,45 +139,6 @@ const accusedSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    dob: {
-  type: Date,
-  default: null,
-      },
-
-      markIdentification: {
-        type: String,
-        default: "",
-      },
-
-      built: {
-        type: String,
-        default: "",
-      },
-
-      relationWithBailer: {
-        type: String,
-        default: "",
-      },
-
-      policeStation: {
-        type: String,
-        default: "",
-      },
-
-      state: {
-        type: String,
-        default: "",
-      },
-
-      pinCode: {
-        type: String,
-        default: "",
-      },
-
-      isJailCustody: {
-        type: Boolean,
-        default: false,
-      },
   },
   { timestamps: true }
 );

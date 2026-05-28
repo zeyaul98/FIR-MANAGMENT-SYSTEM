@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
+import { apiCall } from "../../api";
+import toast from "react-hot-toast";
 import {
   User,
   Mail,
@@ -11,10 +13,85 @@ import {
   FileText,
   Clock,
   Activity,
+  Edit3,
+  Lock,
+  Save,
+  X,
 } from "lucide-react";
 
 const OfficerProfile = () => {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
+
+  const [user, setUser] = useState(savedUser);
+  const [editOpen, setEditOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+
+  const [profileForm, setProfileForm] = useState({
+    name: savedUser.name || "",
+    email: savedUser.email || "",
+    mobile: savedUser.mobile || "",
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const handleProfileChange = (e) => {
+    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
+  };
+
+  const handlePasswordChange = (e) => {
+    setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
+  };
+
+  const updateProfile = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await apiCall("/api/officer/profile", {
+        method: "PUT",
+        body: JSON.stringify(profileForm),
+      });
+
+      const updatedUser = res.data || profileForm;
+
+      localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
+      setUser({ ...user, ...updatedUser });
+
+      toast.success("Profile updated successfully");
+      setEditOpen(false);
+    } catch (error) {
+      toast.error(error.message || "Profile update failed");
+    }
+  };
+
+  const changePassword = async (e) => {
+    e.preventDefault();
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("New password aur confirm password match nahi hai");
+      return;
+    }
+
+    try {
+      await apiCall("/api/officer/change-password", {
+        method: "PUT",
+        body: JSON.stringify(passwordForm),
+      });
+
+      toast.success("Password changed successfully");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setPasswordOpen(false);
+    } catch (error) {
+      toast.error(error.message || "Password change failed");
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[#EEF3FA]">
@@ -25,7 +102,7 @@ const OfficerProfile = () => {
           <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10"></div>
           <div className="absolute right-20 bottom-[-60px] w-44 h-44 rounded-full bg-white/10"></div>
 
-          <div className="relative flex items-center justify-between">
+          <div className="relative flex items-center justify-between gap-5">
             <div>
               <p className="text-blue-100 font-medium">Officer Account</p>
               <h1 className="text-4xl font-bold mt-2">
@@ -36,8 +113,22 @@ const OfficerProfile = () => {
               </p>
             </div>
 
-            <div className="w-28 h-28 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/30 shadow-lg">
-              <User size={58} />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditOpen(true)}
+                className="bg-white/20 hover:bg-white/30 px-5 py-3 rounded-2xl font-bold flex items-center gap-2"
+              >
+                <Edit3 size={18} />
+                Edit
+              </button>
+
+              <button
+                onClick={() => setPasswordOpen(true)}
+                className="bg-white text-blue-700 hover:bg-blue-50 px-5 py-3 rounded-2xl font-bold flex items-center gap-2"
+              >
+                <Lock size={18} />
+                Change Password
+              </button>
             </div>
           </div>
         </div>
@@ -89,10 +180,85 @@ const OfficerProfile = () => {
             </div>
           </div>
         </div>
+
+        {editOpen && (
+          <Modal title="Edit Profile" onClose={() => setEditOpen(false)}>
+            <form onSubmit={updateProfile} className="space-y-4">
+              <Input label="Full Name" name="name" value={profileForm.name} onChange={handleProfileChange} />
+              <Input label="Email" name="email" value={profileForm.email} onChange={handleProfileChange} />
+              <Input label="Mobile" name="mobile" value={profileForm.mobile} onChange={handleProfileChange} />
+
+              <button className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                <Save size={18} />
+                Save Profile
+              </button>
+            </form>
+          </Modal>
+        )}
+
+        {passwordOpen && (
+          <Modal title="Change Password" onClose={() => setPasswordOpen(false)}>
+            <form onSubmit={changePassword} className="space-y-4">
+              <Input
+                label="Current Password"
+                name="currentPassword"
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={handlePasswordChange}
+              />
+              <Input
+                label="New Password"
+                name="newPassword"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={handlePasswordChange}
+              />
+              <Input
+                label="Confirm New Password"
+                name="confirmPassword"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={handlePasswordChange}
+              />
+
+              <button className="w-full bg-green-700 hover:bg-green-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                <Lock size={18} />
+                Update Password
+              </button>
+            </form>
+          </Modal>
+        )}
       </main>
     </div>
   );
 };
+
+const Modal = ({ title, children, onClose }) => (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-7">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-2xl font-black text-gray-900">{title}</h2>
+        <button onClick={onClose} className="bg-gray-100 hover:bg-gray-200 p-2 rounded-xl">
+          <X size={20} />
+        </button>
+      </div>
+      {children}
+    </div>
+  </div>
+);
+
+const Input = ({ label, name, value, onChange, type = "text" }) => (
+  <div>
+    <label className="font-bold text-gray-600">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full mt-2 border bg-gray-50 rounded-xl px-4 py-3 outline-none focus:border-blue-600 focus:bg-white"
+    />
+  </div>
+);
 
 const MiniItem = ({ icon, text }) => (
   <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4 text-gray-700">

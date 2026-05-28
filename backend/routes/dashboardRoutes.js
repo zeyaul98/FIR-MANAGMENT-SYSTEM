@@ -12,7 +12,7 @@ const {
   getDailyFIRReport,
   getMonthlyCrimeReport,
   getAllFIRs,
-} = require("../controllers/dashboardController");
+} = require("../controllers/admindashboardController");
 const { verifyToken } = require("../authMiddleware");
 
 const router = express.Router();
