@@ -8,9 +8,7 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build || echo 'No build script for backend'",
-    "build:frontend": "cd frontend && npm run build",
+    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install && rm -rf dist && cp -r ../frontend/dist ./dist",
     "start": "cd backend && npm start || node server.js",
     "lint": "cd frontend && npm run lint"
   },
