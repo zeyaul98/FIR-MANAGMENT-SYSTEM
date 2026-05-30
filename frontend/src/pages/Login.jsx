@@ -88,9 +88,6 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-sm text-gray-600 mt-4 text-center">
-          Demo: Use admin/admin123 or officer/officer123
-        </p>
       </div>
     </div>
   );
