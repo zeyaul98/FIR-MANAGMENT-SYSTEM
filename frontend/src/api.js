@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "https://fir-managment-system.onrender.com/";
+const API_URL = import.meta.env.VITE_API_URL || "https://fir-managment-system.onrender.com";
 
 export const getApiUrl = () => API_URL;
 
